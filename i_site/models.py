@@ -1,5 +1,5 @@
 from django.db import models
-
+from tinymce import models as tinymce_models
 
 class BasicInfo(models.Model):
     name = models.CharField(
@@ -10,9 +10,12 @@ class BasicInfo(models.Model):
             verbose_name = 'Descripción',
             blank = True,
             null = True)
-    date_created = models.DateField(
+    date_created = models.DateTimeField(
             verbose_name = 'Fecha de creación',
             auto_now_add = True)
+    date_last_updated = models.DateTimeField(
+            verbose_name = 'Fecha de actualización',
+            auto_now = True)
     is_activated = models.BooleanField(
             verbose_name = 'Activado/Desactivado',
             default = True)
@@ -21,8 +24,8 @@ class BasicInfo(models.Model):
         abstract = True
 
 class Course(BasicInfo):
-    syllabus = HTMLField()
-    policies = HTMLField()
+    syllabus = tinymce_models.HTMLField()
+    policies = tinymce_models.HTMLField()
 
     def __str__(self):
         return self.name
@@ -57,18 +60,18 @@ class Requirement(BasicInfo):
         verbose_name_plural = 'Requerimientos'
 
 
-class W2W(models.Model):
-    name = models.CharField(
-            verbose_name = 'Nombre',
-            max_length = 50,
+class W2W(BasicInfo):
+    course = models.ForeignKey(
+            Course,
+            verbose_name = 'Curso',
             blank = False)
     content = models.FileField(
-            upload = 'contents',
+            upload_to = 'contents',
             verbose_name = 'Contentido',
             help_text = 'Contenido de la semana',
             blank = False)
     task = models.FileField(
-            upload = 'tasks',
+            upload_to = 'tasks',
             verbose_name = 'Tarea',
             help_text = 'Tarea de la semana',
             blank = False)
@@ -120,7 +123,7 @@ class Staff(BasicInfo):
         verbose_name_plural = 'Personal'
 
 
-class Schedule(model.Model):
+class Schedule(models.Model):
 
     DAYS_OF_WEEK = (
         (0,'Lunes'),
@@ -140,10 +143,10 @@ class Schedule(model.Model):
             verbose_name = 'Día',
             choices = DAYS_OF_WEEK,
             blank = False)
-    hour_start = TimeField(
+    hour_start = models.TimeField(
             verbose_name = 'Hora de inicio',
             blank=False)
-    hour_end = TimeField(
+    hour_end = models.TimeField(
             verbose_name = 'Hora de final',
             blank=False)
 
@@ -158,7 +161,7 @@ class Schedule(model.Model):
 
 class News(BasicInfo):
     image = models.FileField(
-            upload = 'news',
+            upload_to = 'news',
             verbose_name = 'Imágen',
             blank = True,
             null = True)
@@ -172,7 +175,7 @@ class News(BasicInfo):
         return self.name
 
     class Meta:
-        ordering = ['-date_created']
+        ordering = ['-date_last_updated']
         default_related_name = 'news'
         verbose_name = 'Noticias'
         verbose_name_plural = 'Noticias'
